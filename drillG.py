@@ -33,7 +33,6 @@ checklist_data = {
         "Under-Dribble": {"p": "Ball below knee-height.", "v": "under.mp4", "detail": "Split pick and rolls effectively."},
         "Wrap Around": {"p": "Circular behind-back.", "v": "wrap.mp4", "detail": "Shield ball from reachers."},
         "In-and-Out": {"p": "Weight shift fake.", "v": "in_out.mp4", "detail": "Fake a cross, keep same hand."},
-        "Exchange": {"p": "Rapid low transfer.", "v": "exchange.mp4", "detail": "Quick switch under the knees."},
         "High Hang": {"p": "Float at waist height.", "v": "high_hang.mp4", "detail": "Time the defender's movements."},
         "Push Cross": {"p": "Aggressive long cross.", "v": "push_cross.mp4", "detail": "Cover ground on the break."},
         "Behind Legs": {"p": "Leg as a shield.", "v": "btwn_legs.mp4", "detail": "Safe change of direction."},
