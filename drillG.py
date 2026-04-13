@@ -13,6 +13,12 @@ import os
 
 # --- 1. THE EXPANDED 1,000 COMBO DICT ---
 checklist_data = {
+    "Obstacles": {
+        "Med Ball": "Hold med ball in off-hand; drop it during the second move.",
+        "Rip Cone": "Touch the cone with your lead hand during the footwork phase.",
+        "Tennis Ball Toss": "Coach tosses tennis ball; catch it while performing the handle.",
+        "No Obstacle": "Pure focus on the mechanical execution."
+    },
     "Footwork": {
         "The Drop": {"p": "Split feet wide, hips low.", "v": "the_drop.mp4", "detail": "Focus on width over depth."},
         "Punch Step": {"p": "Violent lead-foot plant.", "v": "punch_step.mp4", "detail": "Sells the drive to force a retreat."},
@@ -51,19 +57,23 @@ checklist_data = {
         "Power Width": {"p": "Two-foot explosive finish.", "v": "power.mp4", "detail": "Maintain balance through contact."}
     }
 }
-# --- 2. GENERATE THE 1,000 COMBO DECK ---
+# --- 2. GENERATE THE PRO STACK DECK ---
 if 'drill_deck' not in st.session_state:
-    # This creates exactly 1,000 permutations
-    combos = list(itertools.product(
-        checklist_data["Footwork"].keys(), 
-        checklist_data["Handle"].keys(), 
-        checklist_data["Finishing"].keys()
-    ))
+    # We pull 2 Handles, 2 Footworks, 1 Finish, and 1 Obstacle
+    # This creates millions of possible unique drills!
+    combos = []
+    
+    # We create a smaller sample of the millions of possibilities to keep it fast
+    for _ in range(1000):
+        h1, h2 = random.sample(list(checklist_data["Handle"].keys()), 2)
+        f1, f2 = random.sample(list(checklist_data["Footwork"].keys()), 2)
+        fin = random.choice(list(checklist_data["Finishing"].keys()))
+        obs = random.choice(list(checklist_data["Obstacles"].keys()))
+        combos.append((h1, h2, f1, f2, fin, obs))
+        
     random.shuffle(combos)
     st.session_state.drill_deck = combos
     st.session_state.history = []
-
-# (The rest of your UI/Video display code remains the same)
 # --- 3. HELPERS ---
 def fix_youtube_url(url):
     return url.replace("shorts/", "watch?v=") if "shorts" in url else url
@@ -91,9 +101,9 @@ if st.sidebar.button("🔄 Reset Deck"):
 for item in reversed(st.session_state.history):
     st.sidebar.write(f"- {item}")
 
-st.title("🏀 Pro Skill Generator")
+st.title("🏀 SHOOTING STARS DRILL Generator")
 
-# --- 5. THE DRILL GENERATOR ---
+# --- 5. SHOOTING STARS DRILL GENERATOR ---
 # We use a unique key here to prevent any "Duplicate Element" errors
 if st.button('🔥 GENERATE NEXT UNIQUE DRILL', use_container_width=True, key="main_drill_gen"):
     if st.session_state.drill_deck:
