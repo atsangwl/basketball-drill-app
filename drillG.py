@@ -6,12 +6,35 @@ import base64
 from gtts import gTTS
 import itertools
 
-import streamlit as st
-import random
-import itertools
-import os
+# --- MOBILE OPTIMIZATION CSS ---
+st.markdown("""
+    <style>
+    /* Make the Generate button huge and easy to tap with a thumb */
+    div.stButton > button:first-child {
+        height: 5em;
+        font-size: 20px !important;
+        font-weight: bold;
+        border-radius: 15px;
+        border: 2px solid #FF0000;
+        background-color: #FF0000;
+        color: white;
+    }
+    
+    /* Center text for phone viewing */
+    .stHeader, .stTitle {
+        text-align: center;
+    }
 
-# --- 1. THE EXPANDED 1,000 COMBO DICT ---
+    /* Adjust video player to fit phone width perfectly */
+    .stVideo {
+        border-radius: 10px;
+        border: 1px solid #333;
+    }
+    </style>
+    """, unsafe_allow_html=True)
+    
+
+# --- 1. THE DATA DICTIONARY ---
 checklist_data = {
     "Obstacles": {
         "Med Ball": "Hold med ball in off-hand; drop it during the second move.",
@@ -29,8 +52,7 @@ checklist_data = {
         "Heel-to-Toe": {"p": "Roll weight to sell drive.", "v": "heel_toe.mp4", "detail": "Lure defender before a counter."},
         "Stutter Step": {"p": "High-frequency small steps.", "v": "stutter.mp4", "detail": "Disrupts defender's timing."},
         "Step-Back": {"p": "Push off lead foot.", "v": "step_back.mp4", "detail": "Creates 3+ feet of space."},
-        "High Pick Up": {"v": "high_pick.mp4",  "p": "Chin the ball and keep it above your forehead through the jump.",  "detail": "As you take your two steps, rip the ball from your hip to above your head. This 'high-path' finish prevents defenders from stripping the ball low and allows you to use your body to shield the play."
-},
+        "High Pick Up": {"v": "high_pick.mp4",  "p": "Chin the ball and keep it above your forehead through the jump.",  "detail": "Rip the ball from hip to above head to shield from defenders."},
         "Pivot Reverse": {"p": "Protect ball with back.", "v": "pivot_rev.mp4", "detail": "Use body to shield the drive."}
     },
     "Handle": {
@@ -57,13 +79,11 @@ checklist_data = {
         "Power Width": {"p": "Two-foot explosive finish.", "v": "power.mp4", "detail": "Maintain balance through contact."}
     }
 }
+
 # --- 2. GENERATE THE PRO STACK DECK ---
 if 'drill_deck' not in st.session_state:
-    # We pull 2 Handles, 2 Footworks, 1 Finish, and 1 Obstacle
-    # This creates millions of possible unique drills!
     combos = []
-    
-    # We create a smaller sample of the millions of possibilities to keep it fast
+    # Creating a sample of 1,000 unique "Pro Stacks"
     for _ in range(1000):
         h1, h2 = random.sample(list(checklist_data["Handle"].keys()), 2)
         f1, f2 = random.sample(list(checklist_data["Footwork"].keys()), 2)
@@ -74,10 +94,8 @@ if 'drill_deck' not in st.session_state:
     random.shuffle(combos)
     st.session_state.drill_deck = combos
     st.session_state.history = []
-# --- 3. HELPERS ---
-def fix_youtube_url(url):
-    return url.replace("shorts/", "watch?v=") if "shorts" in url else url
 
+# --- 3. HELPERS ---
 def speak_text(text):
     try:
         tts = gTTS(text=text, lang='en')
@@ -90,7 +108,7 @@ def speak_text(text):
     except: pass
 
 # --- 4. APP UI ---
-st.set_page_config(page_title="Coach Pro", page_icon="🏀")
+st.set_page_config(page_title="Shooting Stars Pro", page_icon="🏀")
 
 # Sidebar: HISTORY
 st.sidebar.header("📜 Session History")
@@ -101,55 +119,53 @@ if st.sidebar.button("🔄 Reset Deck"):
 for item in reversed(st.session_state.history):
     st.sidebar.write(f"- {item}")
 
-st.title("🏀 SHOOTING STARS DRILL Generator")
+st.title("🏀 SHOOTING STARS Generator")
 
-# --- 5. SHOOTING STARS DRILL GENERATOR ---
-# We use a unique key here to prevent any "Duplicate Element" errors
-if st.button('🔥 GENERATE NEXT UNIQUE DRILL', use_container_width=True, key="main_drill_gen"):
+# --- 5. DRILL GENERATOR LOGIC ---
+if st.button('🔥 GENERATE NEXT PRO STACK', use_container_width=True, key="main_drill_gen"):
     if st.session_state.drill_deck:
-        # 1. Pick the drill from our shuffled 1,000+ combo deck
-        f_key, h_key, fin_key = st.session_state.drill_deck.pop(0)
+        # Unpack all 6 elements
+        h1, h2, f1, f2, fin, obs = st.session_state.drill_deck.pop(0)
         
-        # 2. Extract the data for these moves
-        f_data = checklist_data["Footwork"][f_key]
-        h_data = checklist_data["Handle"][h_key]
-        fin_data = checklist_data["Finishing"][fin_key]
-        
-        # 3. Save to history
-        drill_str = f"{h_key} + {f_key} + {fin_key}"
-        st.session_state.history.append(drill_str)
+        # Get data for display
+        h1_d, h2_d = checklist_data["Handle"][h1], checklist_data["Handle"][h2]
+        f1_d, f2_d = checklist_data["Footwork"][f1], checklist_data["Footwork"][f2]
+        fin_d = checklist_data["Finishing"][fin]
+        obs_detail = checklist_data["Obstacles"][obs]
 
+        # Save to history
+        drill_str = f"{h1}+{h2} | {f1}+{f2} | {fin}"
+        st.session_state.history.append(f"{drill_str} ({obs})")
+
+        # Main Header Display
         st.header(f"Stack: {drill_str}")
-        st.write(f"Remaining combinations in deck: {len(st.session_state.drill_deck)}")
+        st.warning(f"🎯 **OBSTACLE:** {obs} — {obs_detail}")
+        st.write(f"Remaining Drills: {len(st.session_state.drill_deck)}")
         
-        # --- 6. DISPLAY THE VIDEOS ---
+        # --- 6. DISPLAY VIDEOS ---
         video_folder = "videos"
-        
         display_list = [
-            ("Footwork", f_key, f_data), 
-            ("Handle", h_key, h_data), 
-            ("Finishing", fin_key, fin_data)
+            ("Handle 1", h1, h1_d), ("Handle 2", h2, h2_d),
+            ("Footwork 1", f1, f1_d), ("Footwork 2", f2, f2_d),
+            ("Finishing", fin, fin_d)
         ]
 
         for label, name, data in display_list:
             st.subheader(f"🎥 {label}: {name}")
-            
             video_path = os.path.join(video_folder, data['v'])
             
             if os.path.exists(video_path):
                 st.video(video_path)
-                st.caption(f"📁 Playing: {data['v']}")
             else:
-                # This helps you identify which of the 30 videos you still need to download
-                st.error(f"❌ Video not found: Add '{data['v']}' to your videos folder.")
+                st.error(f"❌ Video Missing: {data['v']}")
                 
-            with st.expander("Technical Breakdown"):
+            with st.expander("Show Details"):
                 st.write(data['detail'])
-            st.info(f"**Coaching Key:** {data['p']}")
+            st.info(f"**Key:** {data['p']}")
             st.divider()
 
-        # Voice Trigger for the court
-        speak_text(f"Next drill. {h_key}, {f_key}, and {fin_key}.")
+        # Voice Trigger
+        speak_text(f"Next drill. {h1}, {h2}. Footwork {f1}, {f2}. Finish with {fin}. Obstacle is {obs}.")
         
     else:
-        st.success("🎉 All unique combinations completed! Reset the deck in the sidebar to start over.")
+        st.success("🎉 Session Complete! Reset the deck to start a new practice.")
